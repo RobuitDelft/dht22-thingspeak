@@ -20,7 +20,6 @@ def do_connect_wlan():
             pass
     print('network config:', sta_if.ifconfig())
 
-
 # Deactivate Access Point (to not annoy network guys)
 def activate_ap():
     ap_if = network.WLAN(network.AP_IF)
