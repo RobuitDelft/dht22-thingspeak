@@ -5,6 +5,7 @@ import sys
 from os import urandom
 from umqtt.robust import MQTTClient
 from dht import DHT22
+import config
 
 try:
     import usocket as socket
@@ -13,39 +14,19 @@ except:
 
 import ussl as ssl
 
-# Pins
-DHT22_PIN = 12
-LCD_PIN_SDA=4
-LCD_PIN_SCL=5
-LED_PIN=14
-
-## Thingspeak vars
-#API_THINGSPEAK_HOST = 'api.thingspeak.com'
-#API_THINGSPEAK_PORT = 443
-THINGSPEAK_CHANNEL_ID = '<channelid>' # put your key here
-THINGSPEAK_WRITE_KEY = '<write api key>' # put your key here
-THINGSPEAK_MQTT_KEY = '<mqtt api key>' # put your key here
-THINGSPEAK_URL = b"mqtt.thingspeak.com" 
-THINGSPEAK_USER_ID = b'<userid>'
-
-# timings in seconds
-#MEASUREMENT_INTERVAL = 300 # TODO: read this from a config file
-MEASUREMENT_INTERVAL = 60 # TODO: read this from a config file
-DELAY = 5
-
 ## INIT SECTION
 
 # create a random MQTT clientID & MQTTClient object
 randomNum = int.from_bytes(urandom(3), 'little')
 myMqttClient = bytes("client_"+str(randomNum), 'utf-8')
 client = MQTTClient(client_id=myMqttClient, 
-                    server=THINGSPEAK_URL, 
-                    user=THINGSPEAK_USER_ID, 
-                    password=THINGSPEAK_MQTT_KEY, 
+                    server=config.THINGSPEAK_URL, 
+                    user=config.THINGSPEAK_USER_ID, 
+                    password=config.THINGSPEAK_MQTT_KEY, 
                     ssl=False)
 
 # Init LCD screen and set backlight off
-i2c = I2C(scl=Pin(LCD_PIN_SCL), sda=Pin(LCD_PIN_SDA), freq=400000)
+i2c = I2C(scl=Pin(config.LCD_PIN_SCL), sda=Pin(config.LCD_PIN_SDA), freq=400000)
 lcd = I2cLcd(i2c, 0x27, 2, 16)
 lcd.backlight_off()
 
@@ -56,7 +37,7 @@ def do_connect_WLAN():
     if not sta_if.isconnected():
         print('connecting to network...')
         sta_if.active(True)
-        sta_if.connect('<SSID>','<password>')
+        sta_if.connect(config.WLAN_SSID,config.WLAN_PASSWORD)
         while not sta_if.isconnected():
             pass
         print('network config:', sta_if.ifconfig())
@@ -64,7 +45,7 @@ def do_connect_WLAN():
 # measures temperature and humidity with DHT22 sensor, and sends the data to ThingSpeak, Terminal, LED and LCD
 def measure_temperature_and_humidity():
     # DHT Sensor
-    d = DHT22(Pin(DHT22_PIN,Pin.IN,Pin.PULL_UP))
+    d = DHT22(Pin(config.DHT22_PIN,Pin.IN,Pin.PULL_UP))
     # Measure
     d.measure()
     t = d.temperature()
@@ -83,7 +64,7 @@ def measure_temperature_and_humidity():
     try:
         print('send data to ThingSpeak')            
         client.connect()
-        credentials = bytes("channels/{:s}/publish/{:s}".format(THINGSPEAK_CHANNEL_ID, THINGSPEAK_WRITE_KEY), 'utf-8')  
+        credentials = bytes("channels/{:s}/publish/{:s}".format(config.THINGSPEAK_CHANNEL_ID, config.THINGSPEAK_WRITE_KEY), 'utf-8')  
         payload = bytes("field1={:.1f}&field2={:.1f}\n".format(t,h), 'utf-8')
         client.publish(credentials, payload)
     except Exception as e:
@@ -94,7 +75,7 @@ def measure_temperature_and_humidity():
 
     # LED Output
     # LED light
-    led = Pin(LED_PIN,Pin.OUT)
+    led = Pin(config.LED_PIN,Pin.OUT)
     led(1)
     time.sleep_ms(200)
     if h < 70:
@@ -110,13 +91,13 @@ last_measurement_time = time.time()
 while True:
     try:
         current_time = time.time()
-        if current_time - last_measurement_time > MEASUREMENT_INTERVAL: 
+        if current_time - last_measurement_time > config.MEASUREMENT_INTERVAL: 
             # (Re)Connect to TU Visitor WLAN
             do_connect_WLAN()
             # Doing things
             measure_temperature_and_humidity()
             last_measurement_time = current_time
-        time.sleep(DELAY)
+        time.sleep(config.DELAY)
     except KeyboardInterrupt:
         print('Ctrl-C pressed...exiting')
         client.disconnect()
