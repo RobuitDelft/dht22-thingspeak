@@ -1,6 +1,6 @@
 # WLAN
-WLAN_SSID=''
-WLAN_PASSWORD=''
+wlandict = {0:['SSID1','Pwd1'],1:['SSID2','pwd2'],2:['SSID3','pwd3']}
+
 
 # Pins
 DHT22_PIN = 12
