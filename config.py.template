@@ -1,20 +1,25 @@
-# WLAN
-wlandict = {0:['SSID1','Pwd1'],1:['SSID2','pwd2'],2:['SSID3','pwd3']}
+# WLAN Parameters
+WLANSSID=b'YourSSID'
+WLANPASS=b'YourPasswd'
 
-
-# Pins
+# Pins on D1 Mini
 DHT22_PIN = 12
-LCD_PIN_SDA=4
-LCD_PIN_SCL=5
-LED_PIN=14
+#LCD_PIN_SDA=4
+#LCD_PIN_SCL=5
+#LED_PIN=14
 
 ## Thingspeak vars
-THINGSPEAK_CHANNEL_ID = '' # put your key here
-THINGSPEAK_WRITE_KEY = '' # put your key here
-THINGSPEAK_MQTT_KEY = '' # put your key here
-THINGSPEAK_URL = b"mqtt.thingspeak.com" 
-THINGSPEAK_USER_ID = b'' # put your user id here
+THINGSPEAK_CHANNEL_ID = b'123454' # Channel ID (In channel section)
+THINGSPEAK_WRITE_KEY = b'QWERTY123UIOP' # Write API key for Channel (In channel section)
+THINGSPEAK_MQTT_KEY = b'QWERTY123UIOP' # MQTT API Key (In user profile section)
+THINGSPEAK_URL = b'mqtt.thingspeak.com'
+THINGSPEAK_USER_ID = b'robvl66' # put your user id here (In user profile section)
+
+## ThingTweet
+THINGTWEET_URL='https://api.thingspeak.com/apps/thingtweet/1/statuses/update/'
+THINGTWEET_KEY='QWERTY123UIOP' (In Apps|ThingTweet section)
+THINGTWEET_TXT='Temperature = %.2f Degrees Celcius!'
 
 # timings in seconds
-MEASUREMENT_INTERVAL = 60 
+MEASUREMENT_INTERVAL = 300 
 DELAY = 5
