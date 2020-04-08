@@ -59,7 +59,7 @@ while True:
         # Flash led every config.DELAY seconds
         if (time.time() - last_led) >  config.LED_INTERVAL:
             led.value(0)
-            time.sleep(1)
+            time.sleep(0.5)
             led.value(1)
             last_led = time.time()
 
@@ -74,10 +74,6 @@ while True:
             last_message = time.time()
     except OSError as e:
         print('OSError Exception{}{}'.format(type(e).__name__, e))
-        client.disconnect()
-        restart_and_reconnect()
-    except MQTTException as e:
-        print('MQTTException {}{}'.format(type(e).__name__, e))
         client.disconnect()
         restart_and_reconnect()
     except KeyboardInterrupt:
