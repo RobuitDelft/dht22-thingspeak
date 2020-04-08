@@ -1,4 +1,4 @@
-# Temperature and Humidity data collection, analyze and visualize   
+# Temperature and Humidity: data collection, analyze and visualize, react   
 
 This little project is about experimenting with esp8266 - dht22 - micropython - iot - mqtt - thingspeak
 
