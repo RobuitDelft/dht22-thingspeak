@@ -1,5 +1,6 @@
 # Temperature and Humidity: data collection, analyze and visualize, react   
 
+
 This little project is about experimenting with esp8266 - dht22 - micropython - iot - mqtt - thingspeak
 
 This repository contains the micropython code running on the Lolin D1 Mini. It collects data from the DHT22 sensor and writes it to the ThingSpeak platform.
