@@ -1,6 +1,8 @@
 def connect_and_subscribe_mqtt():
     global client_id
     time.sleep(1)
+    randomNum = int.from_bytes(urandom(3), 'little')
+    myMqttClient = bytes("client_"+str(randomNum), 'utf-8')
     client = MQTTClient(client_id=myMqttClient,
                         server=config.THINGSPEAK_URL, 
                         user=config.THINGSPEAK_USER_ID, 
@@ -25,52 +27,65 @@ def send_tweet(txt):
     
 def measure_dht22():
     print('Perform Measurement')
-    dhtpin = Pin(12, Pin.IN, Pin.PULL_UP)
+    dhtpin = Pin(config.DHT22_PIN, Pin.IN, Pin.PULL_UP)
     d = DHT22(dhtpin)
-    time.sleep(5)
+    time.sleep(2)
     d.measure()
+    time.sleep(2)
+    print('temperature = %.2f' % d.temperature())
+    print('humidity    = %.2f' % d.humidity())
     return d
 
 # Led
 led = Pin(2, Pin.OUT)
 
-# MQTT variables
-randomNum = int.from_bytes(urandom(3), 'little')
-myMqttClient = bytes("client_"+str(randomNum), 'utf-8')
-myMqttCredentials = bytes("channels/{:s}/publish/{:s}".format(config.THINGSPEAK_CHANNEL_ID, config.THINGSPEAK_WRITE_KEY), 'utf-8')
-
 # Initialize MQTT objects
+print('Initialize MQTT objects')
 try:
+  myMqttCredentials = bytes("channels/{:s}/publish/{:s}".format(config.THINGSPEAK_CHANNEL_ID, config.THINGSPEAK_WRITE_KEY), 'utf-8')
   client = connect_and_subscribe_mqtt()
 except OSError as e:
   print('could not connect to MQTT server {}{}'.format(type(e).__name__, e))
   restart_and_reconnect()
-  
-print('Start Main Loop')
+
+ 
 # Main Loop
-last_message = 0
+print('Start Main Loop')
+last_message = (-(config.MEASUREMENT_INTERVAL+100))
+last_led=0
 while True:
     try:
-        if (time.time() - last_message) % config.DELAY == 0:
-            led.value(not led.value())
+
+        # Flash led every config.DELAY seconds
+        if (time.time() - last_led) >  config.LED_INTERVAL:
+            led.value(0)
+            time.sleep(1)
+            led.value(1)
+            last_led = time.time()
+
+        # Measure and process data every config.MEASUREMENT_INTERVAL seconds
         if (time.time() - last_message) > config.MEASUREMENT_INTERVAL:
             vals = measure_dht22()
             t=vals.temperature()
             h=vals.humidity()
-            print('temperature = %.2f' % t)
-            print('humidity    = %.2f' % h)
-            payload = bytes("field1={:.1f}&field2={:.1f}\n".format(t,h), 'utf-8')
-            print('Publish')
+            payload = bytes("field1={:.1f}&field2={:.1f}\n".format(vals.temperature(),vals.humidity()), 'utf-8')
+            print('Publish MQTT Data')
             client.publish(myMqttCredentials, payload)
             last_message = time.time()
     except OSError as e:
         print('OSError Exception{}{}'.format(type(e).__name__, e))
+        client.disconnect()
         restart_and_reconnect()
     except MQTTException as e:
         print('MQTTException {}{}'.format(type(e).__name__, e))
+        client.disconnect()
         restart_and_reconnect()
-#    except Exception as e:
-#        print('Exception {}{}'.format(type(e).__name__, e))
-#        restart_and_reconnect()
+    except KeyboardInterrupt:
+        print('Ctrl-C pressed...exiting')
+        client.disconnect()
+        sys.exit()
+    except:
+        continue  
+
 
      
