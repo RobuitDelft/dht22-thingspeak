@@ -14,9 +14,24 @@ def connect_and_subscribe_mqtt():
     print('Connected to %s MQTT broker' % config.THINGSPEAK_URL.decode())
     return client
 
+def reconnect_wifi():
+    # Disable Access Point (to not annoy network guys)
+    accesspoint = network.WLAN(network.AP_IF)
+    accesspoint.active(False)
+
+    # Wait while connection comes up
+    station = network.WLAN(network.STA_IF)
+    while station.isconnected() == False:
+        time.sleep(1)
+        station.active(True)
+        station.connect(config.WLANSSID, config.WLANPASS)
+    print('Connection successful')
+    print(station.ifconfig())
+
 def restart_and_reconnect():
     print('Failed to connect to MQTT broker. Reconnecting...')
     time.sleep(10)
+    client.disconnect()
     machine.reset()
   
 def send_tweet(txt):
@@ -35,6 +50,11 @@ def measure_dht22():
     print('temperature = %.2f' % d.temperature())
     print('humidity    = %.2f' % d.humidity())
     return d
+
+def flash_led():
+    led.value(0)
+    time.sleep(0.2)
+    led.value(1)
 
 # Led
 led = Pin(2, Pin.OUT)
@@ -58,30 +78,24 @@ while True:
 
         # Flash led every config.DELAY seconds
         if (time.time() - last_led) >  config.LED_INTERVAL:
-            led.value(0)
-            time.sleep(0.5)
-            led.value(1)
+            flash_led()
             last_led = time.time()
-
         # Measure and process data every config.MEASUREMENT_INTERVAL seconds
         if (time.time() - last_message) > config.MEASUREMENT_INTERVAL:
             vals = measure_dht22()
-            t=vals.temperature()
-            h=vals.humidity()
-            payload = bytes("field1={:.1f}&field2={:.1f}\n".format(vals.temperature(),vals.humidity()), 'utf-8')
+            message = bytes("field1={:.1f}&field2={:.1f}\n".format(vals.temperature(),vals.humidity()), 'utf-8')
+            # Check Wifi
+            if station.isconnected() == False:
+                print('Reconnect to wifi')
+                reconnect_wifi()
             print('Publish MQTT Data')
-            client.publish(myMqttCredentials, payload)
+            client.publish(myMqttCredentials, message)
             last_message = time.time()
-    except OSError as e:
-        print('OSError Exception{}{}'.format(type(e).__name__, e))
-        client.disconnect()
-        restart_and_reconnect()
     except KeyboardInterrupt:
         print('Ctrl-C pressed...exiting')
         client.disconnect()
         sys.exit()
     except:
-        continue  
-
+        restart_and_reconnect()
 
      
