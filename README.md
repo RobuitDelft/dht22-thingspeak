@@ -34,4 +34,7 @@ https://en.wikipedia.org/wiki/MicroPython
 - Breadboard ~ $3,00
 - Jumper wires ~ $2,00
 - Rubber band
-![Wemos d1 mini](img/d1mini.jpeg)
+  
+   
+
+<img src="img/d1mini.jpeg" alt="drawing" width="400"/>
